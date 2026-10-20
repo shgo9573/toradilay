@@ -1,0 +1,681 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Heebo", "Assistant", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Frank Ruhl Libre", "David", "FrankRuehl", Georgia, serif;
+
+  --color-navy-950: #050b1a;
+  --color-navy-900: #0a1530;
+  --color-navy-800: #0f1d38;
+  --color-navy-700: #16274a;
+  --color-navy-600: #1e3567;
+  --color-navy-500: #2a4688;
+
+  --color-gold-200: #fbeeb8;
+  --color-gold-300: #f3dc8a;
+  --color-gold-400: #e5be53;
+  --color-gold-500: #c59b27;
+  --color-gold-600: #a37d16;
+
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ------------------------------------------------------------------ */
+/* בסיס                                                                */
+/* ------------------------------------------------------------------ */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #050b1a;
+  color: #e8edf7;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+input,
+textarea,
+select {
+  user-select: text;
+  -webkit-user-select: text;
+  font-family: inherit;
+}
+
+::selection {
+  background: #e5be53;
+  color: #0a1530;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 190, 83, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(229, 190, 83, 0.3);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* רקע                                                                 */
+/* ------------------------------------------------------------------ */
+
+.kiosk-root {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(1100px 650px at 85% -10%, rgba(42, 70, 136, 0.7) 0%, transparent 62%),
+    radial-gradient(900px 600px at 0% 110%, rgba(30, 53, 103, 0.65) 0%, transparent 58%),
+    linear-gradient(180deg, #0a1530 0%, #060d1f 100%);
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 25%, transparent 78%);
+}
+
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora i {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+}
+.aurora i:nth-child(1) {
+  width: 46vw;
+  height: 46vw;
+  background: #c59b27;
+  opacity: 0.2;
+  top: -16vw;
+  right: -10vw;
+  animation: aurora-a 22s ease-in-out infinite alternate;
+}
+.aurora i:nth-child(2) {
+  width: 52vw;
+  height: 52vw;
+  background: #2d5bd1;
+  opacity: 0.28;
+  bottom: -24vw;
+  left: -14vw;
+  animation: aurora-b 28s ease-in-out infinite alternate;
+}
+.aurora i:nth-child(3) {
+  width: 30vw;
+  height: 30vw;
+  background: #0ea5a4;
+  opacity: 0.13;
+  top: 28%;
+  left: 38%;
+  animation: aurora-c 34s ease-in-out infinite alternate;
+}
+
+.spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.4s;
+  background: radial-gradient(
+    380px circle at var(--sx, 50%) var(--sy, 50%),
+    rgba(243, 220, 138, 0.13),
+    transparent 70%
+  );
+}
+.spotlight.is-visible {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* לוחות (זכוכית)                                                      */
+/* ------------------------------------------------------------------ */
+
+.panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 30px 60px -30px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.fx-glass .panel {
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+.fx-glass-fallback .panel,
+.kiosk-root:not(.fx-glass) .panel {
+  background: #111f3e;
+}
+
+.panel-solid {
+  background: #0d1a35;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+}
+
+.inset-field {
+  background: rgba(5, 11, 26, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(100deg, #fbeeb8 0%, #e5be53 40%, #c59b27 60%, #fbeeb8 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.fx-shimmer .text-gold-gradient {
+  animation: gold-sweep 6s linear infinite;
+}
+
+/* קרן אור שרצה על מסגרת הלוח */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.beam::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0 68%,
+    rgba(243, 220, 138, 0.95) 84%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+}
+.fx-glowInput .beam::before {
+  opacity: 1;
+  animation: beam 7s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* כפתורים                                                             */
+/* ------------------------------------------------------------------ */
+
+.btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.25s ease,
+    filter 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.975);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:focus-visible {
+  outline: 2px solid #f3dc8a;
+  outline-offset: 2px;
+}
+
+.btn-gold {
+  color: #1a1203;
+  background: linear-gradient(135deg, #fbeeb8 0%, #e5be53 38%, #c59b27 78%, #a37d16 100%);
+  box-shadow:
+    0 12px 30px -12px rgba(197, 155, 39, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+.btn-gold:hover:not(:disabled) {
+  filter: brightness(1.07);
+  box-shadow:
+    0 16px 36px -10px rgba(229, 190, 83, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.btn-navy {
+  color: #fff;
+  background: linear-gradient(180deg, #2a4688 0%, #1e3567 100%);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 12px 28px -14px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.btn-navy:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.btn-emerald {
+  color: #fff;
+  background: linear-gradient(135deg, #14c28b 0%, #059669 55%, #047857 100%);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 12px 28px -12px rgba(5, 150, 105, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.btn-emerald:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-ghost {
+  color: #dbe4f5;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.btn-danger {
+  color: #fff;
+  background: linear-gradient(135deg, #f0525b 0%, #dc2626 55%, #b91c1c 100%);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 26px -12px rgba(220, 38, 38, 0.7);
+}
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-done {
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+.btn-done-blue {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+.btn-key {
+  color: #f1f5fc;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 6px 0 -2px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  font-variant-numeric: tabular-nums;
+}
+.btn-key:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.08));
+}
+.btn-key:active:not(:disabled) {
+  transform: translateY(3px) scale(0.98);
+  box-shadow:
+    0 2px 0 -2px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.fx-glowInput .btn-key:active:not(:disabled) {
+  border-color: rgba(243, 220, 138, 0.8);
+  box-shadow:
+    0 0 0 2px rgba(229, 190, 83, 0.45),
+    0 0 32px rgba(229, 190, 83, 0.5);
+}
+
+/* ברק רץ על כפתורים */
+.fx-shimmer .btn-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  animation: shimmer 3.4s ease-in-out infinite;
+}
+
+/* אדווה */
+.ripple-wave {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.45);
+  transform: scale(0);
+  animation: ripple 0.7s ease-out forwards;
+}
+.btn-gold .ripple-wave {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* ------------------------------------------------------------------ */
+/* שדה ת.ז.                                                            */
+/* ------------------------------------------------------------------ */
+
+.digit-slot {
+  transition:
+    transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1),
+    box-shadow 0.25s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.digit-slot.is-active {
+  border-color: #e5be53;
+  background: rgba(229, 190, 83, 0.1);
+}
+.fx-glowInput .digit-slot.is-active {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 0 0 4px rgba(229, 190, 83, 0.16),
+    0 10px 34px -4px rgba(229, 190, 83, 0.55);
+}
+.fx-glowInput .digit-pop {
+  animation: pop 0.28s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+.fx-glowInput .digit-slot.is-filled {
+  box-shadow: 0 0 22px -6px rgba(229, 190, 83, 0.35);
+}
+
+.caret {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+.shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ------------------------------------------------------------------ */
+/* לוגו                                                                */
+/* ------------------------------------------------------------------ */
+
+.logo-ring {
+  position: absolute;
+  inset: -14%;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, transparent 0 55%, rgba(243, 220, 138, 0.85) 80%, transparent 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  opacity: 0;
+}
+.fx-logoAnimation .logo-ring {
+  opacity: 1;
+  animation: spin 7s linear infinite;
+}
+.logo-halo {
+  position: absolute;
+  inset: -30%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(229, 190, 83, 0.35), transparent 65%);
+  opacity: 0;
+}
+.fx-logoAnimation .logo-halo {
+  opacity: 1;
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+.fx-logoAnimation .logo-float {
+  animation: float 5.5s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* מסמכים                                                              */
+/* ------------------------------------------------------------------ */
+
+.paper {
+  background: #fffdf8;
+  color: #0f172a;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 12px 28px -12px rgba(0, 0, 0, 0.55);
+}
+
+.docx-content-page {
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-serif);
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.docx-content-page h1,
+.docx-content-page h2,
+.docx-content-page h3,
+.docx-content-page h4 {
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0 0 0.45em;
+  color: #091224;
+}
+.docx-content-page h1 {
+  font-size: 1.5em;
+}
+.docx-content-page h2 {
+  font-size: 1.3em;
+}
+.docx-content-page h3 {
+  font-size: 1.12em;
+}
+.docx-content-page p {
+  margin: 0 0 0.6em;
+  color: #1e293b;
+}
+.docx-content-page strong,
+.docx-content-page b {
+  font-weight: 800;
+  color: #000;
+}
+.docx-content-page ul,
+.docx-content-page ol {
+  margin: 0 1.2em 0.6em 0;
+  padding: 0;
+}
+.docx-content-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6em 0;
+}
+.docx-content-page td,
+.docx-content-page th {
+  border: 1px solid #cbd5e1;
+  padding: 4px 6px;
+}
+.docx-content-page img {
+  max-width: 100%;
+  height: auto;
+}
+
+.doc-full {
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+/* ------------------------------------------------------------------ */
+/* טוסטים וטבעת                                                        */
+/* ------------------------------------------------------------------ */
+
+.toast-progress {
+  transform-origin: right;
+  animation: toast-bar 4.5s linear forwards;
+}
+
+.ring-track {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+.ring-bar {
+  stroke: #e5be53;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* ------------------------------------------------------------------ */
+/* כיבוי כל האפקטים (מתג ראשי)                                         */
+/* ------------------------------------------------------------------ */
+
+.fx-off *,
+.fx-off *::before,
+.fx-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.fx-off .keep-anim {
+  animation: spin 1s linear infinite !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* מסגרות זמן                                                          */
+/* ------------------------------------------------------------------ */
+
+@keyframes aurora-a {
+  to {
+    transform: translate3d(-14vw, 12vh, 0) scale(1.18);
+  }
+}
+@keyframes aurora-b {
+  to {
+    transform: translate3d(16vw, -14vh, 0) scale(1.12);
+  }
+}
+@keyframes aurora-c {
+  to {
+    transform: translate3d(-10vw, 8vh, 0) scale(1.4);
+  }
+}
+@keyframes shimmer {
+  0%,
+  55% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+@keyframes gold-sweep {
+  to {
+    background-position: -220% center;
+  }
+}
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-7px);
+  }
+  40%,
+  60% {
+    transform: translateX(7px);
+  }
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes beam {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+@keyframes toast-bar {
+  to {
+    transform: scaleX(0);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
