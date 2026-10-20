@@ -1,0 +1,79 @@
+name: Build ToraDelia for Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      # Placeholder used only at build time. Never packaged as a credential.
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app_db
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      - name: Build Next.js standalone app
+        run: npm run build:app
+      - name: Build Portable EXE, Setup EXE and unpacked directory
+        run: npx electron-builder --win --x64 --publish never
+      - name: Create ZIP of unpacked Windows app
+        shell: pwsh
+        run: |
+          if (!(Test-Path "dist-electron/win-unpacked/ToraDelia-Kiosk.exe")) {
+            throw "Expected executable was not created in dist-electron/win-unpacked."
+          }
+          Compress-Archive -Path "dist-electron/win-unpacked/*" -DestinationPath "dist-electron/ToraDelia-Kiosk-Windows.zip" -Force
+      - name: Verify outputs
+        shell: pwsh
+        run: |
+          $required = @(
+            "dist-electron/ToraDelia-Kiosk.exe",
+            "dist-electron/ToraDelia-Kiosk-Setup.exe",
+            "dist-electron/ToraDelia-Kiosk-Windows.zip"
+          )
+          foreach ($file in $required) {
+            if (!(Test-Path $file)) { throw "Build output missing: $file" }
+            Write-Host "$file - $([math]::Round((Get-Item $file).Length / 1MB, 2)) MB"
+          }
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ToraDelia-Windows
+          path: |
+            dist-electron/ToraDelia-Kiosk.exe
+            dist-electron/ToraDelia-Kiosk-Setup.exe
+            dist-electron/ToraDelia-Kiosk-Windows.zip
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish latest Windows release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-latest
+          name: "תורה דיליה — הגרסה האחרונה ל-Windows"
+          body: |
+            ## קובצי Windows
+            - **ToraDelia-Kiosk.exe** — Portable.
+            - **ToraDelia-Kiosk-Setup.exe** — מתקין.
+            - **ToraDelia-Kiosk-Windows.zip** — תיקייה פרוסה.
+            הערה: האפליקציה משתמשת ב-PostgreSQL ויש להגדיר DATABASE_URL בקובץ app.env המקומי.
+          files: |
+            dist-electron/ToraDelia-Kiosk.exe
+            dist-electron/ToraDelia-Kiosk-Setup.exe
+            dist-electron/ToraDelia-Kiosk-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

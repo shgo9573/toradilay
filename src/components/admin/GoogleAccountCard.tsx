@@ -24,8 +24,10 @@ import {
   disconnectGoogleAccountApi,
   fetchGoogleAuthStatus,
   saveGoogleClientApi,
+  saveGoogleFirebaseTokenApi,
   startGoogleLoginApi,
 } from "@/lib/client/api";
+import { signInWithGoogleForDrive } from "@/lib/client/google-firebase-auth";
 import { playSound } from "@/lib/client/sound";
 import { FxButton } from "../FxButton";
 import { Field, SectionCard, inputClass } from "./ui";
@@ -92,7 +94,6 @@ export function GoogleAccountCard({
         setClientId(s.oauthClient.clientId);
         setClientType(s.oauthClient.clientType);
         setClientSecret("");
-        if (!s.oauthClient.configured) setShowCreds(true);
       }
     },
     [onStatusChange],
@@ -223,13 +224,39 @@ export function GoogleAccountCard({
     setError(null);
     setInfoMsg(null);
     setBusy(true);
+
+    // כניסה בחלון Google בלי להזין Client ID או Client Secret ידנית.
+    // OAuth קבוע נשאר זמין אם הוגדר מראש ע"י מנהל המערכת.
+    if (!status?.oauthClient.configured) {
+      try {
+        const { accessToken } = await signInWithGoogleForDrive();
+        const result = await saveGoogleFirebaseTokenApi(pin, accessToken);
+        setBusy(false);
+        if (!result.ok || !result.status) {
+          playSound("error");
+          setError(result.error ?? "לא ניתן לשמור את חיבור Google");
+          return;
+        }
+        applyStatus(result.status, false);
+        setShowCreds(false);
+        setInfoMsg("החיבור ל-Google הצליח. ההרשאה זמנית; לאחר שתפוג אפשר להתחבר שוב באותה לחיצה.");
+        playSound("success");
+        return;
+      } catch (err) {
+        setBusy(false);
+        playSound("error");
+        setError(err instanceof Error ? err.message : "התחברות Google נכשלה או שהחלון נסגר");
+        return;
+      }
+    }
+
     const res = await startGoogleLoginApi(
       pin,
       origin,
-      status?.oauthClient.source === "env"
+      status.oauthClient.source === "env"
         ? undefined
         : {
-            clientId: clientId.trim() || status?.oauthClient.clientId,
+            clientId: clientId.trim() || status.oauthClient.clientId,
             clientSecret: clientSecret.trim() || undefined,
             clientType,
           },
@@ -243,7 +270,6 @@ export function GoogleAccountCard({
       return;
     }
 
-    // פתיחת חלון קופץ במרכז המסך
     const w = 520;
     const h = 660;
     const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - w) / 2));
@@ -260,9 +286,7 @@ export function GoogleAccountCard({
     }
 
     setWaitingPopup(true);
-    if (res.needsManualCallbackPaste) {
-      setShowManualPaste(true);
-    }
+    if (res.needsManualCallbackPaste) setShowManualPaste(true);
     void reloadStatus(false);
   };
 
@@ -308,9 +332,7 @@ export function GoogleAccountCard({
     }
   };
 
-  const canConnect =
-    Boolean(status?.oauthClient.configured) ||
-    Boolean(clientId.trim() && (clientSecret.trim() || status?.oauthClient.hasClientSecret));
+  const canConnect = true;
 
   const acc = status?.account ?? null;
   const missingScope = acc && (!acc.scopes.drive || !acc.scopes.sheets);
@@ -319,15 +341,13 @@ export function GoogleAccountCard({
     <SectionCard
       title={
         <span>
-          חשבון <bdi>Google</bdi> מחובר קבוע (<bdi>Drive</bdi> פרטי +{" "}
-          <bdi>Google Sheets</bdi>)
+          חשבון <bdi>Google</bdi> (<bdi>Drive</bdi> פרטי + <bdi>Google Sheets</bdi>)
         </span>
       }
       icon={<UserCheck className="h-4 w-4 text-emerald-400" />}
       hint={
         <span>
-          החיבור נשמר לצמיתות במסד הנתונים ומתחדש אוטומטית — מאפשר כתיבה ל-
-          <bdi>Google Sheets</bdi> וגישה מלאה לדרייב גם כשהתיקיות פרטיות.
+          אפשר להתחבר בחלון Google בלי להזין מפתחות. ההרשאה הזו זמנית ויש להתחבר שוב לאחר תפוגתה; OAuth קבוע שהוגדר מראש ממשיך להתחדש אוטומטית.
         </span>
       }
       action={
@@ -338,7 +358,7 @@ export function GoogleAccountCard({
               : "bg-amber-400/15 text-amber-200"
           }`}
         >
-          {loading ? "בודק..." : acc ? "מחובר קבוע" : "לא מחובר"}
+          {loading ? "בודק..." : acc ? (acc.hasRefreshToken ? "מחובר קבוע" : "חיבור זמני") : "לא מחובר"}
         </span>
       }
     >
@@ -369,7 +389,7 @@ export function GoogleAccountCard({
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
                       <CheckCircle2 className="h-3 w-3" />
-                      נשמר קבוע בהגדרות
+                      {acc.hasRefreshToken ? "נשמר קבוע בהגדרות" : "התחברות זמנית — נדרשת כניסה מחדש לאחר התפוגה"}
                     </span>
                   </div>
                   <div className="truncate font-mono text-xs text-emerald-200" dir="ltr">
@@ -456,7 +476,7 @@ export function GoogleAccountCard({
               <span>
                 {waitingPopup
                   ? "ממתין לאישור בחלון Google..."
-                  : "התחבר עם חשבון Google (שמירה קבועה)"}
+                  : "התחבר עם חשבון Google"}
               </span>
             </button>
 

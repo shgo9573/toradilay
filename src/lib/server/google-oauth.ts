@@ -370,12 +370,15 @@ export async function getGoogleAuthToken(): Promise<{
         }
       : null);
 
-  if (!account?.refreshToken) return null;
+  if (!account) return null;
 
-  // אם הטוקן הקיים תקף לעוד 90 שניות לפחות — מחזירים מיד ללא פניית רשת
+  // התחברות דרך חלון Google יכולה להחזיר access token תקף ללא refresh token.
   if (account.accessToken && account.expiresAt - 90_000 > Date.now()) {
     return { token: account.accessToken, email: account.email };
   }
+
+  // אם זו התחברות זמנית והטוקן פג — נדרשת התחברות מחדש בדפדפן.
+  if (!account.refreshToken) return null;
 
   if (g.__kioskOAuthRefreshPromise) {
     return g.__kioskOAuthRefreshPromise;
@@ -445,11 +448,17 @@ export async function buildGoogleAuthStatus(
 ): Promise<GoogleAuthStatus> {
   const stored = await getStoredConfig();
   const { source, client } = resolveOAuthClient(stored);
-  const acc = stored.googleAccount;
+  const savedAccount = stored.googleAccount;
+  const acc =
+    savedAccount &&
+    (Boolean(savedAccount.refreshToken) ||
+      Boolean(savedAccount.accessToken && savedAccount.expiresAt - 90_000 > Date.now()))
+      ? savedAccount
+      : null;
   const scopeStr = acc?.scope ?? "";
 
   return {
-    connected: Boolean(acc?.refreshToken),
+    connected: Boolean(acc),
     account: acc
       ? {
           email: acc.email,

@@ -37,14 +37,18 @@ function normalizeGoogleAccount(raw: unknown): StoredGoogleAccount | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Partial<StoredGoogleAccount>;
   if (typeof r.email !== "string" || !r.email.trim()) return null;
-  if (typeof r.refreshToken !== "string" || !r.refreshToken.trim()) return null;
+  const refreshToken = typeof r.refreshToken === "string" ? r.refreshToken.trim() : "";
+  const accessToken = typeof r.accessToken === "string" ? r.accessToken.trim() : "";
+  const expiresAt =
+    typeof r.expiresAt === "number" && Number.isFinite(r.expiresAt) ? r.expiresAt : 0;
+  if (!refreshToken && (!accessToken || !expiresAt)) return null;
   return {
     email: r.email.trim(),
     name: typeof r.name === "string" && r.name.trim() ? r.name.trim() : undefined,
     picture: typeof r.picture === "string" && r.picture.trim() ? r.picture.trim() : undefined,
-    refreshToken: r.refreshToken.trim(),
-    accessToken: typeof r.accessToken === "string" ? r.accessToken.trim() : "",
-    expiresAt: typeof r.expiresAt === "number" && Number.isFinite(r.expiresAt) ? r.expiresAt : 0,
+    refreshToken,
+    accessToken,
+    expiresAt,
     scope: typeof r.scope === "string" ? r.scope : undefined,
     connectedAt:
       typeof r.connectedAt === "string" && r.connectedAt

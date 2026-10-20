@@ -326,6 +326,22 @@ export async function completeGoogleLoginManualApi(
   }
 }
 
+export async function saveGoogleFirebaseTokenApi(
+  pin: string,
+  accessToken: string,
+): Promise<{ ok: boolean; status?: GoogleAuthStatus; error?: string }> {
+  try {
+    const res = await fetch("/api/google/firebase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin, accessToken }),
+    });
+    return await json(res);
+  } catch {
+    return { ok: false, error: "שגיאת תקשורת" };
+  }
+}
+
 export async function disconnectGoogleAccountApi(
   pin: string,
 ): Promise<{ ok: boolean; status?: GoogleAuthStatus; error?: string }> {

@@ -263,7 +263,11 @@ export async function resolveTarget(
   const spreadsheetId = override.spreadsheetId || cfg.spreadsheetId;
   const webhookUrl = override.webhookUrl ?? cfg.sheetsWebhookUrl;
 
-  if (cfg.googleAccount?.refreshToken || process.env.GOOGLE_REFRESH_TOKEN?.trim()) {
+  if (
+    cfg.googleAccount?.refreshToken ||
+    Boolean(cfg.googleAccount?.accessToken && cfg.googleAccount.expiresAt > Date.now()) ||
+    process.env.GOOGLE_REFRESH_TOKEN?.trim()
+  ) {
     return { method: "oauth", spreadsheetId, sa: null, webhookUrl };
   }
   const sa = loadServiceAccount();
