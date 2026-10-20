@@ -100,5 +100,6 @@
       "artifactName": "ToraDelia-Kiosk.exe",
       "requestExecutionLevel": "user"
     }
-  }
+  },
+  "version": "1.0.0"
 }
